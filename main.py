@@ -34,8 +34,6 @@ if file is not None:
     )
 
     chunks = text_splitter.split_text(text)
-    # st.write(chunks)
-
 
     # Generating Embeddings
     embeddings = OpenAIEmbeddings(openai_api_key = OPEN_AI_API_KEY)
@@ -49,8 +47,7 @@ if file is not None:
     # Do similarity search 
     if user_question:
         match = vector_store.similarity_search(user_question)
-        # st.write(match)
-
+        
         # define the LLM
         llm = ChatOpenAI(
             openai_api_key = OPEN_AI_API_KEY,
