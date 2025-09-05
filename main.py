@@ -60,3 +60,5 @@ if file is not None:
         chain = load_qa_chain(llm, chain_type="stuff")
         response = chain.run(input_documents = match, question=user_question)
         st.write(response)
+
+# TODO: Change layout
