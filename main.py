@@ -36,21 +36,20 @@ if process_btn and file is not None:
     if not text.strip():
         st.error("❌ No extractable text found in this PDF. Try another file...")
 
-    # Break into chunks
-    text_splitter = RecursiveCharacterTextSplitter(
-        separators="\n",
-        chunk_size = 1000,
-        chunk_overlap = 150,
-        length_function = len
-    )
+    else:
+        with st.spinner("Processing PDF..."):
+            text_splitter = RecursiveCharacterTextSplitter(
+                separators=["\n"],
+                chunk_size=1000,
+                chunk_overlap=150,
+                length_function=len
+            )
+            chunks = text_splitter.split_text(text)
 
-    chunks = text_splitter.split_text(text)
+            embeddings = OpenAIEmbeddings(openai_api_key=OPEN_AI_API_KEY)
+            st.session_state.vector_store = FAISS.from_texts(chunks, embeddings)
 
-    # Generating Embeddings
-    embeddings = OpenAIEmbeddings(openai_api_key = OPEN_AI_API_KEY)
-
-    # # Creating vector store - FAISS
-    vector_store = FAISS.from_texts(chunks, embeddings)
+        st.success("✅ PDF processed successfully! Now ask your questions below.")
 
     # Get User Question
     user_question = st.text_input("Type your question here..")
