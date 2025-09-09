@@ -13,21 +13,28 @@ from langchain_community.chat_models import ChatOpenAI
 load_dotenv()
 OPEN_AI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Upload PDF Files
-st.header("Ask DOCS")
+# Streamlit UI
+st.set_page_config(page_title="Doc Chat AI", page_icon="📄", layout="wide")
+st.header("📄 Chat with your PDF")
 
 with st.sidebar:
     st.title("Your Documents")
     file = st.file_uploader("Upload your PDF file and ask questions.", type="pdf")
+    process_btn = st.button("Process PDF")
 
 
 # Extract the text
-if file is not None:
+if process_btn and file is not None:
+    
     pdf_reader = PdfReader(file)
     text = ""
     for page in pdf_reader.pages:
-        text+=page.extract_text()
-        # st.write(text)
+        page_text = page.extract_text()
+        if page_text:
+            text += page_text
+    
+    if not text.strip():
+        st.error("❌ No extractable text found in this PDF. Try another file...")
 
     # Break into chunks
     text_splitter = RecursiveCharacterTextSplitter(
