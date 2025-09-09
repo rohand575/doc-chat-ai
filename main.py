@@ -1,4 +1,6 @@
 import streamlit as st
+import os
+from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings.openai import OpenAIEmbeddings
@@ -7,7 +9,9 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain_community.chat_models import ChatOpenAI
 
 
-OPEN_AI_API_KEY = "op"
+# Load environment variables
+load_dotenv()
+OPEN_AI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Upload PDF Files
 st.header("Ask DOCS")
@@ -60,3 +64,5 @@ if file is not None:
         chain = load_qa_chain(llm, chain_type="stuff")
         response = chain.run(input_documents = match, question=user_question)
         st.write(response)
+
+# TODO: Change layout
