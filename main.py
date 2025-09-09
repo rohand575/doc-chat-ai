@@ -25,31 +25,34 @@ with st.sidebar:
 
 # Extract the text
 if process_btn and file is not None:
-    
-    pdf_reader = PdfReader(file)
-    text = ""
-    for page in pdf_reader.pages:
-        page_text = page.extract_text()
-        if page_text:
-            text += page_text
-    
-    if not text.strip():
-        st.error("❌ No extractable text found in this PDF. Try another file...")
+    try:  
+        pdf_reader = PdfReader(file)
+        text = ""
+        for page in pdf_reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text
+        
+        if not text.strip():
+            st.error("❌ No extractable text found in this PDF. Try another file...")
 
-    else:
-        with st.spinner("Processing PDF..."):
-            text_splitter = RecursiveCharacterTextSplitter(
-                separators=["\n"],
-                chunk_size=1000,
-                chunk_overlap=150,
-                length_function=len
-            )
-            chunks = text_splitter.split_text(text)
+        else:
+            with st.spinner("Processing PDF..."):
+                text_splitter = RecursiveCharacterTextSplitter(
+                    separators=["\n"],
+                    chunk_size=1000,
+                    chunk_overlap=150,
+                    length_function=len
+                )
+                chunks = text_splitter.split_text(text)
 
-            embeddings = OpenAIEmbeddings(openai_api_key=OPEN_AI_API_KEY)
-            st.session_state.vector_store = FAISS.from_texts(chunks, embeddings)
+                embeddings = OpenAIEmbeddings(openai_api_key=OPEN_AI_API_KEY)
+                st.session_state.vector_store = FAISS.from_texts(chunks, embeddings)
 
-        st.success("✅ PDF processed successfully! Now ask your questions below.")
+            st.success("✅ PDF processed successfully! Now ask your questions below.")
+        
+    except Exception as e:
+        st.error(f"⚠️ Error while processing PDF: {e}")
 
     # Get User Question
     user_question = st.text_input("Type your question here..")
