@@ -14,44 +14,83 @@ OPEN_AI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Streamlit page config
 st.set_page_config(page_title="Doc Chat AI", page_icon="📄", layout="wide")
+
+# Custom CSS for professional look
+st.markdown("""
+    <style>
+        body {background-color: #fafafa;}
+        .stButton>button {
+            border-radius: 8px;
+            background-color: #2C3E50;
+            color: white;
+            padding: 8px 16px;
+        }
+        .stButton>button:hover {
+            background-color: #34495E;
+        }
+        .chat-card {
+            background-color:#f9f9f9;
+            padding:15px;
+            border-radius:10px;
+            margin-bottom:10px;
+            box-shadow: 1px 1px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 st.header("📄 Chat with your PDFs")
 
-# Initialize session state variables
+# Initialize session state
 if "vector_store" not in st.session_state:
     st.session_state.vector_store = None
 if "pdf_processed" not in st.session_state:
     st.session_state.pdf_processed = False
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+if "doc_stats" not in st.session_state:
+    st.session_state.doc_stats = {}
 
-# Sidebar: PDF upload
+# Sidebar upload
 with st.sidebar:
     st.title("Upload & Process PDFs")
     files = st.file_uploader("Upload PDF files", type="pdf", accept_multiple_files=True)
     process_btn = st.button("Process PDFs")
+    clear_btn = st.button("Clear Chat")
 
-# Reset everything if no file is uploaded
+# Reset state if no files
 if not files:
     st.session_state.vector_store = None
     st.session_state.pdf_processed = False
     st.session_state.chat_history = []
+    st.session_state.doc_stats = {}
 
-# Process PDFs when button clicked
+# Clear chat manually
+if clear_btn:
+    st.session_state.chat_history = []
+    st.rerun()
+
+# Process PDFs
 if process_btn and files:
     try:
         all_text = ""
-        for file in files:
+        total_pages, total_words = 0, 0
+        progress = st.progress(0)
+
+        for idx, file in enumerate(files):
             pdf_reader = PdfReader(file)
+            total_pages += len(pdf_reader.pages)
             for page in pdf_reader.pages:
                 page_text = page.extract_text()
                 if page_text:
                     all_text += page_text
+                    total_words += len(page_text.split())
+            progress.progress((idx + 1) / len(files))
 
         if not all_text.strip():
             st.error("❌ No extractable text found in uploaded PDFs. Try another file.")
         else:
             with st.spinner("Processing PDFs..."):
-                # Split text into chunks
+                # Split text
                 text_splitter = RecursiveCharacterTextSplitter(
                     separators=["\n"],
                     chunk_size=1000,
@@ -60,27 +99,36 @@ if process_btn and files:
                 )
                 chunks = text_splitter.split_text(all_text)
 
-                # Generate embeddings
+                # Embeddings + vector store
                 embeddings = OpenAIEmbeddings(openai_api_key=OPEN_AI_API_KEY)
                 st.session_state.vector_store = FAISS.from_texts(chunks, embeddings)
                 st.session_state.pdf_processed = True
-                st.session_state.chat_history = []  # Clear chat history on new processing
-                st.success("✅ PDFs processed successfully! Now ask your questions below.")
+                st.session_state.chat_history = []  # reset chat
+                st.session_state.doc_stats = {
+                    "pages": total_pages,
+                    "words": total_words,
+                    "chunks": len(chunks)
+                }
+                st.success("✅ PDFs processed successfully!")
 
     except Exception as e:
         st.error(f"⚠️ Error while processing PDFs: {e}")
 
-# Question input and answering
+# Document stats
+if st.session_state.pdf_processed and st.session_state.doc_stats:
+    stats = st.session_state.doc_stats
+    st.sidebar.markdown("### 📊 Document Stats")
+    st.sidebar.info(f"Pages: {stats.get('pages',0)} | Words: {stats.get('words',0)} | Chunks: {stats.get('chunks',0)}")
+
+# Q&A
 if st.session_state.pdf_processed and st.session_state.vector_store:
     user_question = st.text_input("💬 Ask a question about your PDFs:")
 
     if user_question:
         try:
             with st.spinner("Searching for answers..."):
-                # Similarity search
                 match = st.session_state.vector_store.similarity_search(user_question)
 
-                # LLM
                 llm = ChatOpenAI(
                     openai_api_key=OPEN_AI_API_KEY,
                     temperature=0,
@@ -88,36 +136,38 @@ if st.session_state.pdf_processed and st.session_state.vector_store:
                     model_name="gpt-4"
                 )
 
-                # QA chain
                 chain = load_qa_chain(llm, chain_type="stuff")
                 response = chain.run(input_documents=match, question=user_question)
 
-            # Store in chat history (no source)
+            # Save Q&A to simple dict history (not LangChain)
             st.session_state.chat_history.append({
                 "question": user_question,
                 "answer": response
             })
 
         except Exception as e:
-            st.error(f"⚠️ Error while answering your question: {e}")
+            st.error(f"❌ Chat error: {e}")
 
-# Display chat history (latest first) in card-style
+# Display chat history (latest first)
 if st.session_state.chat_history:
     st.subheader("📌 Chat History (Latest First)")
     for chat in reversed(st.session_state.chat_history):
         st.markdown(
             f"""
-            <div style="
-                background-color:#f0f2f6;
-                padding:15px;
-                border-radius:10px;
-                margin-bottom:10px;
-                box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-            ">
-            <p><strong>Q:</strong> {chat.get('question', '')}</p>
-            <p><strong>A:</strong> {chat.get('answer', '')}</p>
+            <div class="chat-card">
+            <p><strong>Q:</strong> {chat.get('question','')}</p>
+            <p><strong>A:</strong> {chat.get('answer','')}</p>
             </div>
             """,
             unsafe_allow_html=True
         )
 
+# Download chat history
+if st.session_state.chat_history:
+    chat_text = "\n\n".join([f"Q: {c['question']}\nA: {c['answer']}" for c in st.session_state.chat_history])
+    st.download_button(
+        "⬇️ Download Chat History",
+        chat_text,
+        file_name="chat_history.txt",
+        mime="text/plain"
+    )
