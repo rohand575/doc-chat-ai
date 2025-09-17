@@ -1,109 +1,76 @@
 # Doc Chat AI
 
-[![Python](https://img.shields.io/badge/python-3.11-blue)](https://www.python.org/) 
-[![Streamlit](https://img.shields.io/badge/streamlit-v1.30.0-orange)](https://streamlit.io/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+## Overview
+Doc Chat AI is a Streamlit-based application that allows users to upload PDF documents and ask questions interactively. It leverages OpenAI embeddings and FAISS for similarity search and uses a language model to generate answers.
 
-A Streamlit app to **upload PDFs and chat with them** using OpenAI GPT-4 and LangChain.  
-Built with FAISS vector stores and OpenAI embeddings.  
-Ideal for research, document analysis, and AI-powered PDF Q&A.
+## Features
+- Upload one or multiple PDF files (up to 5 at a time, 10MB each).
+- Extract and process text from PDFs.
+- Generate embeddings and build a vector store for similarity search.
+- Ask questions about the documents using AI.
+- Display chat history in latest-first order.
+- Clear chat history with a button.
+- Download chat history as a text file.
+- Display document statistics (pages, words, chunks) in the sidebar.
+- Minimalistic and professional UI.
 
----
-
-## Features (v1.0.0)
-- Upload **one or multiple PDFs**
-- Process PDFs into embeddings for semantic search
-- Ask questions and get answers from your documents
-- **Latest-first chat history**
-- Clean, **card-style chat UI**
-- Easy setup and local run
-
----
-
-## Screenshots
-<!-- Add screenshots of your app here -->
-![Upload Screen](docs/screenshots/upload.png)
-![Chat Interface](docs/screenshots/chat.png)
-
----
+## Requirements
+- Python 3.10+
+- Streamlit
+- PyPDF2
+- LangChain
+- FAISS
+- OpenAI Python SDK
+- python-dotenv
 
 ## Installation
-
-1. **Clone the repo**
+1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/doc-chat-ai.git
+git clone <repo_url>
+```
+2. Navigate to the project directory:
+```bash
 cd doc-chat-ai
 ```
-
-2. **Create and activate virtual environment**
+3. Create a virtual environment:
 ```bash
 python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
 ```
-
-3. **Install dependencies**
+4. Activate the virtual environment:
+- Windows: `venv\Scripts\activate`
+- macOS/Linux: `source venv/bin/activate`
+5. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-
-4. **Add your OpenAI API key**
-- Copy `.env.example` to `.env` and add your key:
-```env
-OPENAI_API_KEY=your_openai_api_key_here
+6. Create a `.env` file in the root directory with your OpenAI API key:
+```bash
+OPENAI_API_KEY=your_openai_api_key
 ```
 
-5. **Run the app**
+## Usage
+Run the application:
 ```bash
 streamlit run main.py
 ```
-
----
-
-## Usage
-1. Upload PDFs in the sidebar (single or multiple files).  
-2. Click **Process PDFs**.  
-3. Type your questions in the chat box.  
-4. Chat history is displayed **latest-first**, and clears when files are removed.  
-
----
+- Upload PDFs via the sidebar.
+- View document statistics.
+- Ask questions in the main interface.
+- Clear or download chat history as needed.
 
 ## Project Structure
 ```
 doc-chat-ai/
-│
-├─ main.py                  # Streamlit app
-├─ requirements.txt         # Python dependencies
-├─ README.md                # Project instructions
-├─ .gitignore               # Files to ignore in git
-├─ .env.example             # Template for API keys
-├─ LICENSE                  # MIT License
-├─ VERSION                  # Project version file
-├─ data/                    # Optional: sample PDFs
-└─ docs/                    # Screenshots or diagrams
+│   main.py
+│   README.md
+│   requirements.txt
+│   .env
 ```
 
----
-
-## Version
-**v1.0.0** – Initial release with core PDF chat functionality
-
----
-
-## Future Improvements
-- v1.1.0: Local embeddings for free usage (no API key required)  
-- v1.2.0: Download chat as PDF or TXT  
-- v1.3.0: Highlight relevant text from PDFs in answers  
-- v2.0.0: Multi-version release with major UI/UX improvements  
-
----
+## Versioning
+- Current version: 1.2.0
+- Changelog is maintained in `CHANGELOG.md`.
 
 ## License
-This project is licensed under the [MIT License](LICENSE).
+This project is open-source and available under the MIT License.
 
----
-
-## References
-- [Streamlit Documentation](https://docs.streamlit.io/)  
-- [LangChain Documentation](https://python.langchain.com/en/latest/)  
-- [FAISS Documentation](https://faiss.ai/)  
