@@ -5,3 +5,4 @@ faiss-cpu
 langchain-community == 0.3.29
 tiktoken == 0.11.0
 python-dotenv
+openai
